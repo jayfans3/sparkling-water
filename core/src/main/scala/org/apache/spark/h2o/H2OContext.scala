@@ -46,13 +46,13 @@ import scala.util.Random
 import scala.util.control.NoStackTrace
 
 /**
- * Simple H2O context motivated by SQLContext.
- *
- * It provides implicit conversion from RDD -> H2OLikeRDD and back.
- */
-class H2OContext (@transient val sparkContext: SparkContext) extends {
-    val sparkConf = sparkContext.getConf
-  } with org.apache.spark.Logging
+  * Simple H2O context motivated by SQLContext.
+  *
+  * It provides implicit conversion from RDD -> H2OLikeRDD and back.
+  */
+class H2OContext(@transient val sparkContext: SparkContext) extends {
+  val sparkConf = sparkContext.getConf
+} with org.apache.spark.Logging
   with H2OConf
   with Serializable {
   self =>
@@ -70,60 +70,69 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
   /** Transforms RDD[Supported type] to H2OFrame */
   def asH2OFrame(rdd: SupportedRDD): H2OFrame = asH2OFrame(rdd, None)
+
   def asH2OFrame(rdd: SupportedRDD, frameName: Option[String]): H2OFrame = H2OContext.toH2OFrame(sparkContext, rdd, frameName)
+
   def asH2OFrame(rdd: SupportedRDD, frameName: String): H2OFrame = asH2OFrame(rdd, Option(frameName))
 
   /** Transforms RDD[Supported type] to H2OFrame key */
   def toH2OFrameKey(rdd: SupportedRDD): Key[_] = toH2OFrameKey(rdd, None)
+
   def toH2OFrameKey(rdd: SupportedRDD, frameName: Option[String]): Key[_] = asH2OFrame(rdd, frameName)._key
+
   def toH2OFrameKey(rdd: SupportedRDD, frameName: String): Key[_] = toH2OFrameKey(rdd, Option(frameName))
 
   /** Transform DataFrame to H2OFrame */
-  def asH2OFrame(df : DataFrame): H2OFrame = asH2OFrame(df, None)
-  def asH2OFrame(df : DataFrame, frameName: Option[String]) : H2OFrame = H2OContext.toH2OFrame(sparkContext, df, if (frameName != null) frameName else None)
-  def asH2OFrame(df : DataFrame, frameName: String) : H2OFrame = asH2OFrame(df, Option(frameName))
+  def asH2OFrame(df: DataFrame): H2OFrame = asH2OFrame(df, None)
+
+  def asH2OFrame(df: DataFrame, frameName: Option[String]): H2OFrame = H2OContext.toH2OFrame(sparkContext, df, if (frameName != null) frameName else None)
+
+  def asH2OFrame(df: DataFrame, frameName: String): H2OFrame = asH2OFrame(df, Option(frameName))
 
   /** Transform DataFrame to H2OFrame key */
-  def toH2OFrameKey(df : DataFrame): Key[Frame] = toH2OFrameKey(df, None)
-  def toH2OFrameKey(df : DataFrame, frameName: Option[String]) : Key[Frame] = asH2OFrame(df, frameName)._key
-  def toH2OFrameKey(df : DataFrame, frameName: String) : Key[Frame] = toH2OFrameKey(df, Option(frameName))
+  def toH2OFrameKey(df: DataFrame): Key[Frame] = toH2OFrameKey(df, None)
 
-  /** Create a new H2OFrame based on existing Frame referenced by its key.*/
+  def toH2OFrameKey(df: DataFrame, frameName: Option[String]): Key[Frame] = asH2OFrame(df, frameName)._key
+
+  def toH2OFrameKey(df: DataFrame, frameName: String): Key[Frame] = toH2OFrameKey(df, Option(frameName))
+
+  /** Create a new H2OFrame based on existing Frame referenced by its key. */
   def asH2OFrame(s: String): H2OFrame = new H2OFrame(s)
 
   /** Create a new H2OFrame based on existing Frame */
   def asH2OFrame(fr: Frame): H2OFrame = new H2OFrame(fr)
+
   /**
-   * Support for calls from Py4J
-   */
+    * Support for calls from Py4J
+    */
 
   /** Conversion from RDD[String] to H2O's DataFrame */
-  def asH2OFrameFromRDDString(rdd: JavaRDD[String], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDString(sparkContext,rdd.rdd, Option(frameName))
+  def asH2OFrameFromRDDString(rdd: JavaRDD[String], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDString(sparkContext, rdd.rdd, Option(frameName))
 
-  /** Returns key of the H2O's DataFrame conversed from RDD[String]*/
+  /** Returns key of the H2O's DataFrame conversed from RDD[String] */
   def asH2OFrameFromRDDStringKey(rdd: JavaRDD[String], frameName: String): Key[Frame] = asH2OFrameFromRDDString(rdd, frameName)._key
 
   /** Conversion from RDD[Boolean] to H2O's DataFrame */
-  def asH2OFrameFromRDDBool(rdd: JavaRDD[Boolean], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDBool(sparkContext,rdd.rdd, Option(frameName))
+  def asH2OFrameFromRDDBool(rdd: JavaRDD[Boolean], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDBool(sparkContext, rdd.rdd, Option(frameName))
 
-  /** Returns key of the H2O's DataFrame conversed from RDD[Boolean]*/
+  /** Returns key of the H2O's DataFrame conversed from RDD[Boolean] */
   def asH2OFrameFromRDDBoolKey(rdd: JavaRDD[Boolean], frameName: String): Key[Frame] = asH2OFrameFromRDDBool(rdd, frameName)._key
 
   /** Conversion from RDD[Double] to H2O's DataFrame */
-  def asH2OFrameFromRDDDouble(rdd: JavaRDD[Double], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDDouble(sparkContext,rdd.rdd, Option(frameName))
+  def asH2OFrameFromRDDDouble(rdd: JavaRDD[Double], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDDouble(sparkContext, rdd.rdd, Option(frameName))
 
-  /** Returns key of the H2O's DataFrame conversed from RDD[Double]*/
+  /** Returns key of the H2O's DataFrame conversed from RDD[Double] */
   def asH2OFrameFromRDDDoubleKey(rdd: JavaRDD[Double], frameName: String): Key[Frame] = asH2OFrameFromRDDDouble(rdd, frameName)._key
 
   /** Conversion from RDD[Long] to H2O's DataFrame */
-  def asH2OFrameFromRDDLong(rdd: JavaRDD[Long], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDLong(sparkContext,rdd.rdd, Option(frameName))
+  def asH2OFrameFromRDDLong(rdd: JavaRDD[Long], frameName: String): H2OFrame = H2OContext.toH2OFrameFromRDDLong(sparkContext, rdd.rdd, Option(frameName))
 
-  /** Returns key of the H2O's DataFrame conversed from RDD[Long]*/
+  /** Returns key of the H2O's DataFrame conversed from RDD[Long] */
   def asH2OFrameFromRDDLongKey(rdd: JavaRDD[Long], frameName: String): Key[Frame] = asH2OFrameFromRDDLong(rdd, frameName)._key
 
   /** Convert given H2O frame into a RDD type */
   @deprecated("Use asRDD instead", "0.2.3")
-  def toRDD[A <: Product: TypeTag: ClassTag](fr : H2OFrame) : RDD[A] = asRDD[A](fr)
+  def toRDD[A <: Product : TypeTag : ClassTag](fr: H2OFrame): RDD[A] = asRDD[A](fr)
 
   /** Convert given H2O frame into a Product RDD type */
   def asRDD[A <: Product: TypeTag: ClassTag](fr : H2OFrame) : RDD[A] = createH2ORDD[A, H2OFrame](fr)
@@ -153,7 +162,7 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
   /** Initialize Sparkling H2O and start H2O cloud with specified number of workers. */
   @deprecated(message = "Use start() method.", since = "1.5.11")
-  def start(h2oWorkers: Int):H2OContext = {
+  def start(h2oWorkers: Int): H2OContext = {
     import H2OConf._
     sparkConf.set(PROP_CLUSTER_SIZE._1, h2oWorkers.toString)
     start()
@@ -162,7 +171,7 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
   /** Initialize Sparkling H2O and start H2O cloud. */
   def start(): H2OContext = {
-    if(!isRunningOnCorrectSpark){
+    if (!isRunningOnCorrectSpark) {
       throw new WrongSparkVersion(s"You are trying to use Sparkling Water built for Spark ${buildSparkMajorVersion}," +
         s" but your $$SPARK_HOME(=${sparkContext.getSparkHome().getOrElse("SPARK_HOME is not defined!")}) property" +
         s" points to Spark of version ${sparkContext.version}. Please ensure correct Spark is provided and" +
@@ -172,7 +181,7 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
     // Setup properties for H2O configuration
     if (!sparkConf.contains(PROP_CLOUD_NAME._1)) {
       sparkConf.set(PROP_CLOUD_NAME._1,
-                    PROP_CLOUD_NAME._2 + System.getProperty("user.name", "cluster") + "_" + Random.nextInt())
+        PROP_CLOUD_NAME._2 + System.getProperty("user.name", "cluster") + "_" + Random.nextInt())
     }
 
     // Check Spark environment and reconfigure some values (Note: this is useless in more of the cases since SparkContext is already running)
@@ -182,9 +191,9 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
     val (spreadRDD, spreadRDDNodes) = createSpreadRDD()
 
-    if(isClusterTopologyListenerEnabled){
+    if (isClusterTopologyListenerEnabled) {
       //attach listener which shutdown H2O when we bump into executor we didn't discover during the spreadRDD phase
-      sparkContext.addSparkListener(new SparkListener(){
+      sparkContext.addSparkListener(new SparkListener() {
         override def onExecutorAdded(executorAdded: SparkListenerExecutorAdded): Unit = {
           throw new IllegalArgumentException("Executor without H2O instance discovered, killing the cloud!")
         }
@@ -196,10 +205,11 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
     val executorIds = allExecutorIds
     // The collected executors based on IDs should match
     assert(spreadRDDNodes.length == executorIds.length,
-            s"Unexpected number of executors ${spreadRDDNodes.length}!=${executorIds.length}")
+      s"Unexpected number of executors ${spreadRDDNodes.length}!=${executorIds.length}")
     // H2O is executed only on the subset of Spark cluster - fail
     if (executorIds.length < allExecutorIds.length) {
-      throw new IllegalArgumentException(s"""Spark cluster contains ${allExecutorIds.length},
+      throw new IllegalArgumentException(
+        s"""Spark cluster contains ${allExecutorIds.length},
                but H2O is running only on ${executorIds.length} nodes!""")
     }
     // Execute H2O on given nodes
@@ -207,13 +217,13 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
     var h2oNodeArgs = getH2ONodeArgs
     // Disable web on h2o nodes in non-local mode
-    if(!sparkContext.isLocal){
+    if (!sparkContext.isLocal) {
       h2oNodeArgs = h2oNodeArgs ++ Array("-disable_web")
     }
     logDebug(s"Arguments used for launching h2o nodes: ${h2oNodeArgs.mkString(" ")}")
     val executors = startH2O(sparkContext, spreadRDD, spreadRDDNodes.length, h2oNodeArgs, nodeNetworkMask)
     // Store runtime information
-    h2oNodes.append( executors:_* )
+    h2oNodes.append(executors: _*)
 
     // Connect to a cluster via H2O client, but only in non-local case
     if (!sparkContext.isLocal) {
@@ -254,7 +264,7 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
   }
 
   private def createSpreadRDD() = new SpreadRDDBuilder(sparkContext,
-                                                       H2OContextUtils.guessTotalExecutorSize(sparkContext)).build()
+    H2OContextUtils.guessTotalExecutorSize(sparkContext)).build()
 
 
   def createH2ORDD[A <: Product: TypeTag: ClassTag, T <: Frame](fr: T): RDD[A] = {
@@ -269,6 +279,7 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
   /** Open H2O Flow running in this client. */
   def openFlow(): Unit = openURI(s"http://${h2oLocalClient}")
+
   /** Open Spark task manager. */
   //def openSparkUI(): Unit = sparkUI.foreach(openURI(_))
 
@@ -288,24 +299,24 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
   }
 
   /**
-   * Return true if running inside spark/sparkling water test.
-   *
-   * @return true if the actual run is test run
+    * Return true if running inside spark/sparkling water test.
+    *
     * @return true if the actual run is test run
-   */
+    * @return true if the actual run is test run
+    */
   private def isTesting = sparkContext.conf.contains("spark.testing") || sys.props.contains("spark.testing")
 
   override def toString: String = {
     s"""
-      |Sparkling Water Context:
-      | * H2O name: ${H2O.ARGS.name}
-      | * number of executors: ${h2oNodes.size}
-      | * list of used executors:
-      |  (executorId, host, port)
-      |  ------------------------
-      |  ${h2oNodes.mkString("\n  ")}
-      |  ------------------------
-      |
+       |Sparkling Water Context:
+       | * H2O name: ${H2O.ARGS.name}
+       | * number of executors: ${h2oNodes.size}
+       | * list of used executors:
+       |  (executorId, host, port)
+       |  ------------------------
+       |  ${h2oNodes.mkString("\n  ")}
+       |  ------------------------
+       |
       |  Open H2O Flow in browser: http://${h2oLocalClient} (CMD + click in Mac OSX)
     """.stripMargin
   }
@@ -319,10 +330,11 @@ class H2OContext (@transient val sparkContext: SparkContext) extends {
 
   // scalastyle:off
   // Disable style checker so "implicits" object can start with lowercase i
-  /** Define implicits available via h2oContext.implicits._*/
+  /** Define implicits available via h2oContext.implicits._ */
   object implicits extends H2OContextImplicits with Serializable {
     protected override def _h2oContext: H2OContext = self
   }
+
   // scalastyle:on
   H2OContext.setInstantiatedContext(this)
 }
@@ -342,6 +354,13 @@ object H2OContext extends Logging {
     }
   }
 
+  def getSparkContext(): SparkContext = {
+    if(instantiatedContext.get() == null) {
+      throw new IllegalStateException("H2O context has to be first initialized!")
+    }
+    instantiatedContext.get().sparkContext
+  }
+
   @transient private val instantiatedContext = new AtomicReference[H2OContext]()
 
   /**
@@ -355,9 +374,9 @@ object H2OContext extends Logging {
   private def getOrCreate(sc: SparkContext, h2oWorkers: Option[Int]): H2OContext = synchronized {
     if (instantiatedContext.get() == null) {
       instantiatedContext.set(new H2OContext(sc))
-      if(h2oWorkers.isEmpty){
+      if (h2oWorkers.isEmpty) {
         instantiatedContext.get().start()
-      }else{
+      } else {
         instantiatedContext.get().start(h2oWorkers.get)
       }
     }
@@ -393,11 +412,11 @@ object H2OContext extends Logging {
   /** Supports call from java environments. */
   @deprecated(message = "Use getOrCreate(sc: JavaSparkContext) method.", since = "1.5.11")
   def getOrCreate(sc: JavaSparkContext, h2oWorkers: Int): H2OContext = {
-    getOrCreate(sc.sc,Some(h2oWorkers))
+    getOrCreate(sc.sc, Some(h2oWorkers))
   }
 
   /** Transform SchemaRDD into H2O Frame */
-  def toH2OFrame(sc: SparkContext, dataFrame: DataFrame, frameKeyName: Option[String]) : H2OFrame = {
+  def toH2OFrame(sc: SparkContext, dataFrame: DataFrame, frameKeyName: Option[String]): H2OFrame = {
     import org.apache.spark.h2o.H2OSchemaUtils._
     // Cache DataFrame RDD's
     val dfRdd = dataFrame.rdd
@@ -405,7 +424,7 @@ object H2OContext extends Logging {
     val keyName = frameKeyName.getOrElse("frame_rdd_" + dfRdd.id)
     // Fetch cached frame from DKV
     val frameVal = DKV.get(keyName)
-    if (frameVal==null) {
+    if (frameVal == null) {
       // Flattens and expands RDD's schema
       val flatRddSchema = expandedSchema(sc, dataFrame)
       // Patch the flat schema based on information about types
@@ -422,7 +441,7 @@ object H2OContext extends Logging {
       // Note: Eager, not lazy, evaluation
       val rows = sc.runJob(dfRdd, perSQLPartition(keyName, flatRddSchema, vecTypes) _)
       val res = new Array[Long](dfRdd.partitions.size)
-      rows.foreach { case (cidx, nrows) => res(cidx) = nrows}
+      rows.foreach { case (cidx, nrows) => res(cidx) = nrows }
 
       // Add Vec headers per-Chunk, and finalize the H2O Frame
       new H2OFrame(
@@ -435,9 +454,9 @@ object H2OContext extends Logging {
     }
   }
 
-  private def inferFieldType(value : Any): Class[_] ={
+  private def inferFieldType(value: Any): Class[_] = {
     value match {
-      case n: Byte  => classOf[java.lang.Byte]
+      case n: Byte => classOf[java.lang.Byte]
       case n: Short => classOf[java.lang.Short]
       case n: Int => classOf[java.lang.Integer]
       case n: Long => classOf[java.lang.Long]
@@ -458,8 +477,8 @@ object H2OContext extends Logging {
     val fnames = 0.until(first.productArity).map(idx => "f" + idx).toArray[String]
     val ftypes = new ListBuffer[Class[_]]()
     val it = first.productIterator
-    while(it.hasNext){
-      ftypes+=inferFieldType(it.next())
+    while (it.hasNext) {
+      ftypes += inferFieldType(it.next())
     }
     // Collect H2O vector types for all input types
     val vecTypes = ftypes.toArray[Class[_]].indices.map(idx => dataTypeToVecType(ftypes(idx))).toArray
@@ -468,13 +487,14 @@ object H2OContext extends Logging {
     // Create chunks on remote nodes
     val rows = sc.runJob(rdd, perTypedRDDPartition(keyName, vecTypes) _) // eager, not lazy, evaluation
     val res = new Array[Long](rdd.partitions.length)
-    rows.foreach{ case(cidx, nrows) => res(cidx) = nrows }
+    rows.foreach { case (cidx, nrows) => res(cidx) = nrows }
 
     // Add Vec headers per-Chunk, and finalize the H2O Frame
     new H2OFrame(finalizeFrame(keyName, res, vecTypes))
   }
+
   /** Transform typed RDD into H2O Frame */
-  def toH2OFrame[A <: Product : TypeTag](sc: SparkContext, rdd: RDD[A], frameKeyName: Option[String]) : H2OFrame = {
+  def toH2OFrame[A <: Product : TypeTag](sc: SparkContext, rdd: RDD[A], frameKeyName: Option[String]): H2OFrame = {
     import org.apache.spark.h2o.H2OTypeUtils._
     import org.apache.spark.h2o.ReflectionUtils._
 
@@ -488,13 +508,13 @@ object H2OContext extends Logging {
     // Create chunks on remote nodes
     val rows = sc.runJob(rdd, perTypedRDDPartition(keyName, vecTypes) _) // eager, not lazy, evaluation
     val res = new Array[Long](rdd.partitions.length)
-    rows.foreach{ case(cidx, nrows) => res(cidx) = nrows }
+    rows.foreach { case (cidx, nrows) => res(cidx) = nrows }
 
     // Add Vec headers per-Chunk, and finalize the H2O Frame
     new H2OFrame(finalizeFrame(keyName, res, vecTypes))
   }
 
-  /** Transform supported type for conversion to H2OFrame*/
+  /** Transform supported type for conversion to H2OFrame */
   def toH2OFrame(sc: SparkContext, rdd: SupportedRDD, frameKeyName: Option[String]): H2OFrame = rdd.toH2OFrame(sc, frameKeyName)
 
   /** Transform RDD[String] to appropriate H2OFrame */
@@ -551,11 +571,11 @@ object H2OContext extends Logging {
     import org.apache.spark.h2o.H2OTypeUtils._
     import org.apache.spark.h2o.ReflectionUtils._
     // first convert vector to dense vector
-    val rddDense = rdd.map(labeledPoint => new LabeledPoint(labeledPoint.label,labeledPoint.features.toDense))
+    val rddDense = rdd.map(labeledPoint => new LabeledPoint(labeledPoint.label, labeledPoint.features.toDense))
     val numFeatures = rddDense.map(labeledPoint => labeledPoint.features.size)
     val maxNumFeatures = numFeatures.max()
     val minNumFeatures = numFeatures.min()
-    if(minNumFeatures<maxNumFeatures){
+    if (minNumFeatures < maxNumFeatures) {
       // Features vectors of different sizes, filling missing with n/a
       logWarning("WARNING: Converting RDD[LabeledPoint] to H2OFrame where features vectors have different size, filling missing with n/a")
     }
@@ -567,7 +587,7 @@ object H2OContext extends Logging {
     initFrame(keyName, fnames)
     val rows = sc.runJob(rddDense, perLabeledPointRDDPartition(keyName, vecTypes, maxNumFeatures) _) // eager, not lazy, evaluation
     val res = new Array[Long](rdd.partitions.length)
-    rows.foreach { case (cidx,  nrows) => res(cidx) = nrows }
+    rows.foreach { case (cidx, nrows) => res(cidx) = nrows }
 
     // Add Vec headers per-Chunk, and finalize the H2O Frame
     new H2OFrame(finalizeFrame(keyName, res, vecTypes))
@@ -575,7 +595,7 @@ object H2OContext extends Logging {
 
   private
   def perPrimitiveRDDPartition[T](keystr: String, vecTypes: Array[Byte])
-                              (context: TaskContext, it: Iterator[T]): (Int, Long) = {
+                                 (context: TaskContext, it: Iterator[T]): (Int, Long) = {
     // An array of H2O NewChunks; A place to record all the data in this partition
     val nchks = water.fvec.FrameUtils.createNewChunks(keystr, vecTypes, context.partitionId)
     // Helper to hold H2O string
@@ -584,7 +604,7 @@ object H2OContext extends Logging {
       // For all rows in RDD
       val chk = nchks(0) // There is only one chunk
       r match {
-        case n: Number  => chk.addNum(n.doubleValue())
+        case n: Number => chk.addNum(n.doubleValue())
         case n: Boolean => chk.addNum(if (n) 1 else 0)
         case n: String  => chk.addStr(valStr.set(n))
         case n : java.sql.Timestamp => chk.addNum(n.asInstanceOf[java.sql.Timestamp].getTime())
@@ -596,9 +616,10 @@ object H2OContext extends Logging {
     // Return Partition# and rows in this Partition
     (context.partitionId, nchks(0)._len)
   }
+
   private
-  def perSQLPartition ( keystr: String, types: Seq[(Seq[Int], StructField, Byte)], vecTypes: Array[Byte])
-                      ( context: TaskContext, it: Iterator[Row] ): (Int,Long) = {
+  def perSQLPartition(keystr: String, types: Seq[(Seq[Int], StructField, Byte)], vecTypes: Array[Byte])
+                     (context: TaskContext, it: Iterator[Row]): (Int, Long) = {
     // New chunks on remote node
     val nchks = water.fvec.FrameUtils.createNewChunks(keystr, vecTypes, context.partitionId)
     val valStr = new BufferedString() // just helper for string columns
@@ -613,15 +634,16 @@ object H2OContext extends Logging {
         // Helpers to distinguish embedded collection types
         val isAry = field._3 == H2OSchemaUtils.ARRAY_TYPE
         val isVec = field._3 == H2OSchemaUtils.VEC_TYPE
-        val isNewPath = if (idx > 0) path != types(idx-1)._1 else true
+        val isNewPath = if (idx > 0) path != types(idx - 1)._1 else true
         // Reset counter for sequences
         if ((isAry || isVec) && isNewPath) startOfSeq = idx
         else if (!isAry && !isVec) startOfSeq = -1
 
         var i = 0
         var subRow = row
-        while (i < path.length-1 && !subRow.isNullAt(path(i))) {
-          subRow = subRow.getAs[Row](path(i)); i += 1
+        while (i < path.length - 1 && !subRow.isNullAt(path(i))) {
+          subRow = subRow.getAs[Row](path(i));
+          i += 1
         }
         val aidx = path(i) // actual index into row provided by path
         if (subRow.isNullAt(aidx)) {
@@ -636,7 +658,7 @@ object H2OContext extends Logging {
           else dataType match {
             case BooleanType => chk.addNum(if (isAry)
               if (ary(aryIdx).asInstanceOf[Boolean]) 1 else 0
-              else if (subRow.getBoolean(aidx)) 1 else 0)
+            else if (subRow.getBoolean(aidx)) 1 else 0)
             case BinaryType =>
             case ByteType => chk.addNum(if (isAry) ary(aryIdx).asInstanceOf[Byte] else subRow.getByte(aidx))
             case ShortType => chk.addNum(if (isAry) ary(aryIdx).asInstanceOf[Short] else subRow.getShort(aidx))
@@ -644,14 +666,14 @@ object H2OContext extends Logging {
             case LongType => chk.addNum(if (isAry) ary(aryIdx).asInstanceOf[Long] else subRow.getLong(aidx))
             case FloatType => chk.addNum(if (isAry) ary(aryIdx).asInstanceOf[Float] else subRow.getFloat(aidx))
             case DoubleType => chk.addNum(if (isAry) {
-                ary(aryIdx).asInstanceOf[Double]
+              ary(aryIdx).asInstanceOf[Double]
+            } else {
+              if (isVec) {
+                subRow.getAs[mllib.linalg.Vector](aidx)(idx - startOfSeq)
               } else {
-                if (isVec) {
-                  subRow.getAs[mllib.linalg.Vector](aidx)(idx - startOfSeq)
-                } else {
-                  subRow.getDouble(aidx)
-                }
-              })
+                subRow.getDouble(aidx)
+              }
+            })
             case StringType => {
               val sv = if (isAry) ary(aryIdx).asInstanceOf[String] else subRow.getString(aidx)
               // Always produce string vectors
@@ -667,26 +689,28 @@ object H2OContext extends Logging {
     // Compress & write out the Partition/Chunks
     water.fvec.FrameUtils.closeNewChunks(nchks)
     // Return Partition# and rows in this Partition
-    (context.partitionId,nchks(0)._len)
+    (context.partitionId, nchks(0)._len)
   }
 
   private
-  def perTypedRDDPartition[A<:Product](keystr:String, vecTypes: Array[Byte])
-                                 ( context: TaskContext, it: Iterator[A] ): (Int,Long) = {
+  def perTypedRDDPartition[A <: Product](keystr: String, vecTypes: Array[Byte])
+                                        (context: TaskContext, it: Iterator[A]): (Int, Long) = {
     // An array of H2O NewChunks; A place to record all the data in this partition
     val nchks = water.fvec.FrameUtils.createNewChunks(keystr, vecTypes, context.partitionId)
 
     val valStr = new BufferedString()
-    it.foreach(prod => { // For all rows which are subtype of Product
-      for( i <- 0 until prod.productArity ) { // For all fields...
+    it.foreach(prod => {
+      // For all rows which are subtype of Product
+      for (i <- 0 until prod.productArity) {
+        // For all fields...
         val fld = prod.productElement(i)
         val chk = nchks(i)
         val x = fld match {
-            case Some(n) => n
-            case _ => fld
+          case Some(n) => n
+          case _ => fld
         }
         x match {
-          case n: Number  => chk.addNum(n.doubleValue())
+          case n: Number => chk.addNum(n.doubleValue())
           case n: Boolean => chk.addNum(if (n) 1 else 0)
           case n: String  => chk.addStr(valStr.set(n))
           case n : java.sql.Timestamp => chk.addNum(n.asInstanceOf[java.sql.Timestamp].getTime())
@@ -697,7 +721,7 @@ object H2OContext extends Logging {
     // Compress & write out the Partition/Chunks
     water.fvec.FrameUtils.closeNewChunks(nchks)
     // Return Partition# and rows in this Partition
-    (context.partitionId,nchks(0)._len)
+    (context.partitionId, nchks(0)._len)
   }
 
   private
@@ -713,13 +737,13 @@ object H2OContext extends Logging {
       chunks(nextChunkId).addNum(labeledPoint.label)
       nextChunkId = nextChunkId + 1
 
-      for( i<-0 until labeledPoint.features.size) {
+      for (i <- 0 until labeledPoint.features.size) {
         // For all features...
         chunks(nextChunkId).addNum(labeledPoint.features(i))
-        nextChunkId =nextChunkId + 1
+        nextChunkId = nextChunkId + 1
       }
 
-      for( i<-labeledPoint.features.size until maxNumFeatures){
+      for (i <- labeledPoint.features.size until maxNumFeatures) {
         // Fill missing features with n/a
         chunks(nextChunkId).addNA()
         nextChunkId = nextChunkId + 1
@@ -732,7 +756,7 @@ object H2OContext extends Logging {
   }
 
   private
-  def initFrame[T](keyName: String, names: Array[String]):Unit = {
+  def initFrame[T](keyName: String, names: Array[String]): Unit = {
     val fr = new water.fvec.Frame(Key.make(keyName))
     water.fvec.FrameUtils.preparePartialFrame(fr, names)
     // Save it directly to DKV
@@ -743,8 +767,8 @@ object H2OContext extends Logging {
   def finalizeFrame[T](keyName: String,
                        res: Array[Long],
                        colTypes: Array[Byte],
-                       colDomains: Array[Array[String]] = null):Frame = {
-    val fr:Frame = DKV.get(keyName).get.asInstanceOf[Frame]
+                       colDomains: Array[Array[String]] = null): Frame = {
+    val fr: Frame = DKV.get(keyName).get.asInstanceOf[Frame]
     water.fvec.FrameUtils.finalizePartialFrame(fr, res, colDomains, colTypes)
     fr
   }
@@ -762,7 +786,7 @@ object H2OContext extends Logging {
 
     if (!conf.contains("spark.scheduler.minRegisteredResourcesRatio") && !sparkContext.isLocal) {
       logWarning("The property 'spark.scheduler.minRegisteredResourcesRatio' is not specified!\n" +
-                 "We recommend to pass `--conf spark.scheduler.minRegisteredResourcesRatio=1`")
+        "We recommend to pass `--conf spark.scheduler.minRegisteredResourcesRatio=1`")
       // Setup the property but at this point it does not make good sense
       conf.set("spark.scheduler.minRegisteredResourcesRatio", "1")
     }
@@ -779,6 +803,7 @@ object H2OContext extends Logging {
       }
     })
   }
+
   private[h2o] def registerClientWebAPI(sc: SparkContext, h2oContext: H2OContext): Unit = {
     // Workaround for [SW-132]
     val doEnableRepl = h2oContext.isH2OReplEnabled && {
@@ -796,6 +821,8 @@ object H2OContext extends Logging {
     registerH2OFramesEndp(sc, h2oContext)
     registerRDDsEndp(sc, h2oContext)
   }
+
+
 
   private def registerH2OFramesEndp(sc: SparkContext, h2oContext: H2OContext) = {
 
@@ -867,6 +894,7 @@ object H2OContext extends Logging {
     def scalaCodeFactory = new HandlerFactory {
       override def create(aClass: Class[_ <: Handler]): Handler = scalaCodeHandler
     }
+
     RequestServer.registerEndpoint("interpretScalaCode", "POST" ,"/3/scalaint/{session_id}",
                            classOf[ScalaCodeHandler], "interpret",
                            "Interpret the code and return the result",
