@@ -18,6 +18,7 @@
 import unittest
 import os
 from pyspark import SparkContext, SparkConf
+from external_cluster_test_utils import ExternalClusterTestHelper
 
 
 
@@ -35,13 +36,22 @@ def get_default_spark_conf():
         set("spark.driver.memory", "2g"). \
         set("spark.executor.memory", "2g"). \
         set("spark.ext.h2o.client.log.level", "DEBUG"). \
-        set("spark.ext.h2o.repl.enabled", "false")
+        set("spark.ext.h2o.repl.enabled", "false"). \
+        set("spark.ext.h2o.backend.cluster.mode", os.getenv('spark.ext.h2o.backend.cluster.mode', "internal")). \
+        set("spark.ext.h2o.cloud.name", ExternalClusterTestHelper.unique_cloud_name("test")). \
+        set("spark.ext.h2o.client.ip", ExternalClusterTestHelper.local_ip())
 
 def set_up_class(cls):
-   pass
+    if ExternalClusterTestHelper.tests_in_external_mode(cls._sc._conf):
+        cls.external_cluster_test_helper = ExternalClusterTestHelper()
+        cloud_name = cls._sc._conf.get("spark.ext.h2o.cloud.name")
+        cloud_ip = cls._sc._conf.get("spark.ext.h2o.client.ip")
+        cls.external_cluster_test_helper.start_cloud(2, cloud_name, cloud_ip)
 
 
 def tear_down_class(cls):
+    if ExternalClusterTestHelper.tests_in_external_mode(cls._sc._conf):
+        cls.external_cluster_test_helper.stop_cloud()
     cls._sc.stop()
 
 # Runs python tests and by default reports to console.

@@ -19,9 +19,11 @@ package org.apache.spark.h2o.converters
 
 import org.apache.spark.TaskContext
 import org.apache.spark.h2o._
+import org.apache.spark.h2o.backends.external.{ExternalReadConverterContext, ExternalWriteConverterContext}
 import org.apache.spark.h2o.backends.internal.{InternalReadConverterContext, InternalWriteConverterContext}
 import org.apache.spark.h2o.utils.NodeDesc
-import water.{DKV, Key}
+import org.apache.spark.sql.types._
+import water.{ExternalFrameHandler, DKV, Key}
 
 import scala.collection.immutable
 import scala.collection.mutable.ListBuffer
@@ -84,7 +86,12 @@ private[converters] trait ConverterUtils {
     initFrame(keyName, colNames)
 
     // prepare rdd and required metadata based on the used backend
-    val (preparedRDD, uploadPlan) = (rdd, None)
+    val (preparedRDD, uploadPlan) = if(hc.getConf.runsInExternalClusterMode){
+       val res = ExternalWriteConverterContext.scheduleUpload[T](rdd)
+      (res._1, Some(res._2))
+    }else{
+      (rdd, None)
+    }
 
     val rows = hc.sparkContext.runJob(preparedRDD, func(keyName, vecTypes, uploadPlan)) // eager, not lazy, evaluation
     val res = new Array[Long](preparedRDD.partitions.length)
@@ -96,13 +103,21 @@ private[converters] trait ConverterUtils {
 
 object ConverterUtils {
   def getWriteConverterContext(uploadPlan: Option[immutable.Map[Int, NodeDesc]], partitionId: Int): WriteConverterContext = {
-    val converterContext = new InternalWriteConverterContext()
+    val converterContext = if (uploadPlan.isDefined) {
+      new ExternalWriteConverterContext(uploadPlan.get.get(partitionId).get)
+    } else {
+      new InternalWriteConverterContext()
+    }
     converterContext
   }
 
   def getReadConverterContext(isExternalBackend: Boolean, keyName: String, chksLocation: Map[Int, NodeDesc],
                               types: Option[Array[Byte]], chunkIdx: Int): ReadConverterContext = {
-    val converterContext = new InternalReadConverterContext(keyName, chunkIdx)
+    val converterContext = if (isExternalBackend) {
+      new ExternalReadConverterContext(keyName, chunkIdx, chksLocation(chunkIdx), types.get)
+    } else {
+      new InternalReadConverterContext(keyName, chunkIdx)
+    }
     converterContext
   }
 
@@ -118,10 +133,35 @@ object ConverterUtils {
     }
   }
 
-  def prepareExpectedTypes[T: TypeTag](isExternalBackend: Boolean, types: Array[T]): Option[Array[Byte]] ={
-    // For now return None because internal backend is used at all cases and we don't need any additional info at this time.
-    None
-  }
+
+  def prepareExpectedTypes[T: TypeTag](isExternalBackend: Boolean, types: Array[T]): Option[Array[Byte]] =
+    if(!isExternalBackend){
+      None
+    }else {
+      typeOf[T] match {
+        case t if t =:= typeOf[DataType] =>
+          Some(types.map {
+            case ByteType => ExternalFrameHandler.T_INTEGER
+            case ShortType => ExternalFrameHandler.T_INTEGER
+            case IntegerType => ExternalFrameHandler.T_INTEGER
+            case LongType => ExternalFrameHandler.T_INTEGER
+            case FloatType => ExternalFrameHandler.T_INTEGER
+            case DoubleType => ExternalFrameHandler.T_DOUBLE
+            case BooleanType => ExternalFrameHandler.T_INTEGER
+            case StringType => ExternalFrameHandler.T_STRING
+            case TimestampType => ExternalFrameHandler.T_INTEGER
+          })
+        case t if t =:= typeOf[Class[_]] =>
+          Some(types.map {
+            case q if q == classOf[Integer] => ExternalFrameHandler.T_INTEGER
+            case q if q == classOf[java.lang.Long] => ExternalFrameHandler.T_INTEGER
+            case q if q == classOf[java.lang.Double] => ExternalFrameHandler.T_DOUBLE
+            case q if q == classOf[java.lang.Float] => ExternalFrameHandler.T_INTEGER
+            case q if q == classOf[java.lang.Boolean] => ExternalFrameHandler.T_INTEGER
+            case q if q == classOf[String] => ExternalFrameHandler.T_STRING
+          })
+      }
+    }
 
 }
 

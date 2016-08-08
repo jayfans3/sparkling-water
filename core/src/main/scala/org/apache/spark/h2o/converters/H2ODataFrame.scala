@@ -53,6 +53,7 @@ class H2ODataFrame[T <: water.fvec.Frame](@transient val hc: H2OContext,
   // contains types in a format same for H2ODataFrame and H2ORDD
   val expectedTypes = ConverterUtils.prepareExpectedTypes(isExternalBackend, types)
 
+
   @DeveloperApi
   override def compute(split: Partition, context: TaskContext): Iterator[InternalRow] = {
     val con = ConverterUtils.getReadConverterContext(isExternalBackend, keyName, chksLocation, expectedTypes, split.index)

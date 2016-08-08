@@ -50,6 +50,7 @@ class H2ORDD[A <: Product: TypeTag: ClassTag, T <: Frame] private (@transient va
     }
   }
 
+
   val isExternalBackend = hc.getConf.runsInExternalClusterMode
   val types = ReflectionUtils.types[A](colNames)
   // Create new types list which describes expected types in a way external H2O backend can use it. This list

@@ -29,7 +29,7 @@ import org.scalatest.{BeforeAndAfterAll, BeforeAndAfterEach, Suite}
   * Helper trait to simplify initialization and termination of Spark/H2O contexts.
   *
   */
-trait SparkTestContext extends BeforeAndAfterEach with BeforeAndAfterAll { self: Suite =>
+trait SparkTestContext extends BeforeAndAfterEach with BeforeAndAfterAll with ExternalClusterModeTestHelper{ self: Suite =>
 
   @transient var sc: SparkContext = _
   @transient var hc: H2OContext = _
@@ -56,6 +56,7 @@ trait SparkTestContext extends BeforeAndAfterEach with BeforeAndAfterAll { self:
     .set("spark.ext.h2o.repl.enabled","false") // disable repl in tests
     .set("spark.scheduler.minRegisteredResourcesRatio", "1")
     .set("spark.ext.h2o.backend.cluster.mode", sys.props.getOrElse("spark.ext.h2o.backend.cluster.mode", "internal"))
+    .set("spark.ext.h2o.cloud.name", uniqueCloudName("test"))
     .set("spark.ext.h2o.client.ip", InetAddress.getLocalHost.getHostAddress)
 }
 
