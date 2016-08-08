@@ -14,28 +14,24 @@
 * See the License for the specific language governing permissions and
 * limitations under the License.
 */
-package org.apache.spark.h2o.util
 
-import org.apache.spark.SparkContext
-import org.apache.spark.h2o.H2OContext
-import org.apache.spark.sql.SQLContext
-import org.scalatest.Suite
+package org.apache.spark.h2o.utils
 
-/** This fixture create a Spark context once and share it over whole run of test suite. */
-trait SharedSparkTestContext extends SparkTestContext { self: Suite =>
+import water.H2ONode
 
-  def createSparkContext:SparkContext
-  def createH2OContext(sc:SparkContext):H2OContext = H2OContext.getOrCreate(sc)
+/** Helper class containing node ID, hostname and port.
+  *
+  * @param nodeId  In case of external cluster mode the node ID is ID of H2O Node, in the internal cluster mode the ID
+  * is ID of Spark Executor where corresponding instance is located
+  * @param hostname hostname of the node
+  * @param port port of the node
+  */
+case class NodeDesc(nodeId: String, hostname: String, port: Int) {
+  override def productPrefix = ""
+}
 
-  override def beforeAll(): Unit = {
-    super.beforeAll()
-    sc = createSparkContext
-    sqlc = SQLContext.getOrCreate(sc)
-    hc = createH2OContext(sc)
-  }
-
-  override protected def afterAll(): Unit = {
-    resetContext()
-    super.afterAll()
+object NodeDesc{
+  def fromH2ONode(node: H2ONode): NodeDesc ={
+    NodeDesc(node.index().toString, node.getIpPortString.split(":")(0), Integer.parseInt(node.getIpPortString.split(":")(1)))
   }
 }

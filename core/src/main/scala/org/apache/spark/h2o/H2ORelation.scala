@@ -18,20 +18,23 @@
 package org.apache.spark.h2o
 
 import org.apache.spark.Logging
+import org.apache.spark.h2o.utils.H2OSchemaUtils
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.{DataFrame, Row, SQLContext}
 import water.DKV
 
+
 object DataSourceUtils{
+
   def getSparkSQLSchema(key: String): StructType = {
-    val frame = DKV.getGet[H2OFrame](key)
+    val frame = DKV.getGet[Frame](key)
     H2OSchemaUtils.createSchema(frame)
   }
 
-  def overwrite(key: String,originalFrame: H2OFrame, newDataFrame: DataFrame)(implicit h2oContext: H2OContext): Unit = {
+  def overwrite(key: String, originalFrame: Frame, newDataFrame: DataFrame)(implicit h2oContext: H2OContext): Unit = {
     originalFrame.remove()
-    h2oContext.asH2OFrame(newDataFrame,key)
+    h2oContext.asH2OFrame(newDataFrame, key)
   }
 }
 
@@ -40,13 +43,17 @@ case class H2ORelation(
               (implicit @transient val sqlContext: SQLContext) extends BaseRelation with TableScan with PrunedScan with Logging {
 
 
-  implicit lazy val h2oContext = H2OContext.get().getOrElse(throw new RuntimeException("H2OContext has to be started in order" +
-    " to save/load frames using H2O Data source"))
-
+  implicit lazy private val h2oContext = {
+    if(H2OContext.get().isEmpty){
+      throw new RuntimeException("H2OContext has to be started in order to save/load data using H2O Data source.")
+    }else{
+      H2OContext.get().get
+    }
+  }
   val schema = DataSourceUtils.getSparkSQLSchema(key)
 
   override def buildScan(): RDD[Row] = {
-    h2oContext.asDataFrame(DKV.getGet[H2OFrame](key)).rdd
+    h2oContext.asDataFrame(DKV.getGet[Frame](key)).rdd
   }
 
   override def buildScan(requiredColumns: Array[String]): RDD[Row] = {
@@ -55,7 +62,7 @@ case class H2ORelation(
         buildScan()
     }else{
       import h2oContext.implicits._
-      val frame: H2OFrame = DKV.getGet[H2OFrame](key).subframe(requiredColumns)
+      val frame: H2OFrame = DKV.getGet[Frame](key).subframe(requiredColumns)
       h2oContext.asDataFrame(frame).rdd
   }
   }

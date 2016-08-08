@@ -17,20 +17,17 @@
 
 package org.apache.spark.h2o
 
-import org.apache.spark.sql.{DataFrame, SaveMode, SQLContext}
 import org.apache.spark.sql.sources._
 import org.apache.spark.sql.types.StructType
+import org.apache.spark.sql.{DataFrame, SQLContext, SaveMode}
 import water.DKV
 
 /**
   * Provides access to H2OFrame from pure SQL statements (i.e. for users of the
   * JDBC server).
   */
-class DefaultSource
-  extends RelationProvider
-  with SchemaRelationProvider
-  with CreatableRelationProvider
-  with DataSourceRegister{
+class DefaultSource extends RelationProvider
+    with SchemaRelationProvider with CreatableRelationProvider with DataSourceRegister{
 
   /**
     * Short alias for spark-csv data source.
@@ -73,11 +70,14 @@ class DefaultSource
                                parameters: Map[String, String],
                                data: DataFrame): BaseRelation = {
     val key = checkKey(parameters)
-    val originalFrame = DKV.getGet[H2OFrame](key)
-
-    implicit val h2oContext = H2OContext.get().getOrElse(throw new RuntimeException("H2OContext has to be started in" +
-      " oder to save/load frames using H2O Data source"))
-
+    val originalFrame = DKV.getGet[Frame](key)
+    implicit val h2oContext = {
+      if(H2OContext.get().isEmpty){
+        throw new RuntimeException("H2OContext has to be started in order to save/load data using H2O Data source.")
+      }else{
+        H2OContext.get().get
+      }
+    }
     if(originalFrame!=null){
       mode match {
         case SaveMode.Append =>
@@ -90,7 +90,7 @@ class DefaultSource
       }
     }else{
       // save as H2O Frame
-      h2oContext.asH2OFrame(data,key)
+      h2oContext.asH2OFrame(data, key)
     }
 
     createRelation(sqlContext, parameters, data.schema)
